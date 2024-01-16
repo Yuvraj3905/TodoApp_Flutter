@@ -12,6 +12,14 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final todosList = ToDo.todoList();
+  List<ToDo> _foundToDo=[];
+  final _todoController = TextEditingController();
+
+ @override
+ void initState(){
+  _foundToDo=todosList;
+  super.initState();
+ }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +45,7 @@ class _HomeState extends State<Home> {
                           ),
                         ),
                       ),
-                      for (ToDo todoo in todosList)
+                      for (ToDo todoo in _foundToDo)
                         ToDoItem(
                           todo: todoo,
                           onToDoChanged: _handleToDoChange,
@@ -67,6 +75,7 @@ class _HomeState extends State<Home> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: TextField(
+                          controller: _todoController,
                           decoration: InputDecoration(
                               hintText: 'Add a new task',
                               border: InputBorder.none)),
@@ -82,7 +91,9 @@ class _HomeState extends State<Home> {
                             color: Colors.white,
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          _addToDoItem(_todoController.text);
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: tdBlue,
                           minimumSize: Size(60, 60),
@@ -94,61 +105,80 @@ class _HomeState extends State<Home> {
         ));
   }
 
+  void _handleToDoChange(ToDo todo) {
+    setState(() {
+      todo.isDone = !todo.isDone;
+    });
+  }
 
-void _handleToDoChange(ToDo todo) {
+  void _deleteToDoItem(String id) {
+    setState(() {
+      todosList.removeWhere((item) => item.id == id);
+    });
+  }
+
+  void _addToDoItem(String toDo) {
+    setState(() {
+      todosList.add(ToDo(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          todoText: toDo));
+    });
+    _todoController.clear();
+  }
+
+void _runFilter(String enteredKeyword){
+  List<ToDo> results=[];
+  if(enteredKeyword.isEmpty){
+    results=todosList;
+  }else{
+    results=todosList.where((item) => item.todoText!.toLowerCase().contains(enteredKeyword.toLowerCase())).toList();
+  }
   setState(() {
-    todo.isDone = !todo.isDone;
+    _foundToDo=results;
   });
 }
 
-void _deleteToDoItem(String id){
-  setState(() {
-    
-  todosList.removeWhere((item)=>item.id==id);
-  });
+  Widget searchBox() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child:  TextField(
+        onChanged: (value)=> _runFilter(value),
+        decoration: InputDecoration(
+            contentPadding: EdgeInsets.all(0),
+            prefixIcon: Icon(
+              Icons.search,
+              color: tdBlack,
+              size: 20,
+            ),
+            prefixIconConstraints: BoxConstraints(maxHeight: 20, minWidth: 25),
+            border: InputBorder.none,
+            hintText: 'Search',
+            hintStyle: TextStyle(color: tdGrey)),
+      ),
+    );
+  }
 
-}
-
-Widget searchBox() {
-  return Container(
-    padding: EdgeInsets.symmetric(horizontal: 15),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: const TextField(
-      decoration: InputDecoration(
-          contentPadding: EdgeInsets.all(0),
-          prefixIcon: Icon(
-            Icons.search,
-            color: tdBlack,
-            size: 20,
-          ),
-          prefixIconConstraints: BoxConstraints(maxHeight: 20, minWidth: 25),
-          border: InputBorder.none,
-          hintText: 'Search',
-          hintStyle: TextStyle(color: tdGrey)),
-    ),
-  );
-}
-
-AppBar _buildAppBar() {
-  return AppBar(
-    elevation: 0,
-    backgroundColor: tdBGColor,
-    title: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Icon(Icons.menu, color: tdBlack, size: 30),
-        Container(
-          height: 40,
-          width: 40,
-          child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.asset('assets/images/avatar.jpg')),
-        )
-      ],
-    ),
-  );
-}
+  AppBar _buildAppBar() {
+    return AppBar(
+      elevation: 0,
+      backgroundColor: tdBGColor,
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(Icons.menu, color: tdBlack, size: 30),
+          Container(
+            height: 40,
+            width: 40,
+            child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset('assets/images/avatar.jpg')),
+          )
+        ],
+      ),
+    );
+  }
 }
